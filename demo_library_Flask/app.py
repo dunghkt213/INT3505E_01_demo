@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -6,59 +6,55 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///library.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# Model
 class Book(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     author = db.Column(db.String(100), nullable=False)
     available = db.Column(db.Boolean, default=True)
 
-# Tạo database
 with app.app_context():
     db.create_all()
 
-# Trang chủ
-@app.route('/')
-def index():
+# Lấy danh sách sách
+@app.route('/books', methods=['GET'])
+def get_books():
     books = Book.query.all()
-    return render_template('index.html', books=books)
+    return jsonify([{
+        'id': b.id,
+        'title': b.title,
+        'author': b.author,
+        'available': b.available
+    } for b in books])
 
-# Thêm sách
-@app.route('/add', methods=['POST'])
+# Thêm sách mới
+@app.route('/books', methods=['POST'])
 def add_book():
-    title = request.form['title']
-    author = request.form['author']
-    new_book = Book(title=title, author=author, available=True)
+    data = request.get_json()
+    new_book = Book(title=data['title'], author=data['author'], available=True)
     db.session.add(new_book)
     db.session.commit()
-    return redirect(url_for('index'))
+    return jsonify({'message': 'Book added successfully'}), 201
 
-# Mượn sách
-@app.route('/borrow/<int:id>')
-def borrow_book(id):
-    book = Book.query.get(id)
-    if book and book.available:
-        book.available = False
-        db.session.commit()
-    return redirect(url_for('index'))
+# Cập nhật (mượn / trả hoặc sửa info)
+@app.route('/books/<int:id>', methods=['PUT'])
+def update_book(id):
+    book = Book.query.get_or_404(id)
+    data = request.get_json()
 
-# Trả sách
-@app.route('/return/<int:id>')
-def return_book(id):
-    book = Book.query.get(id)
-    if book and not book.available:
-        book.available = True
-        db.session.commit()
-    return redirect(url_for('index'))
+    book.title = data.get('title', book.title)
+    book.author = data.get('author', book.author)
+    book.available = data.get('available', book.available)
+
+    db.session.commit()
+    return jsonify({'message': 'Book updated successfully'})
 
 # Xóa sách
-@app.route('/delete/<int:id>')
+@app.route('/books/<int:id>', methods=['DELETE'])
 def delete_book(id):
-    book = Book.query.get(id)
-    if book:
-        db.session.delete(book)
-        db.session.commit()
-    return redirect(url_for('index'))
+    book = Book.query.get_or_404(id)
+    db.session.delete(book)
+    db.session.commit()
+    return jsonify({'message': 'Book deleted successfully'})
 
 if __name__ == "__main__":
     app.run(debug=True)
