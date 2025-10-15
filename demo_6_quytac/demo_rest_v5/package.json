@@ -1,0 +1,14 @@
+{
+  "name": "demo_rest_v6_layered",
+  "version": "1.0.0",
+  "description": "RESTful API demo áp dụng 6 quy tắc REST: client-server, uniform, stateless, self-descriptive, cacheable, layered system",
+  "main": "gateway.js",
+  "type": "module",
+  "scripts": {
+    "start": "node gateway.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

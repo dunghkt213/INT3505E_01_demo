@@ -1,0 +1,24 @@
+{
+  "name": "demo_library_flask",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node v2_app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dunghkt213/INT3505E_01_demo.git"
+  },
+  "author": "dung",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dunghkt213/INT3505E_01_demo/issues"
+  },
+  "homepage": "https://github.com/dunghkt213/INT3505E_01_demo#readme",
+  "dependencies": {
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2"
+  }
+}
