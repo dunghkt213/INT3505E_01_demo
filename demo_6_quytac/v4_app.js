@@ -2,7 +2,10 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import swaggerUi from "swagger-ui-express";
+import YAML from "yamljs";
 
+// Tải file YAML mô tả API
 const app = express();
 app.use(express.json());
 
@@ -119,5 +122,11 @@ app.post("/api/books/:id/return", authMiddleware, (req, res) => {
     links: [{ rel: "borrow", href: `/api/books/${book.id}/borrow`, method: "POST" }]
   });
 });
+
+app.listen(3000, () => console.log("Server JWT + Cache tại http://localhost:3000"));
+
+
+const swaggerDocument = YAML.load("./v4_app.yaml");
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.listen(3000, () => console.log("Server JWT + Cache tại http://localhost:3000"));

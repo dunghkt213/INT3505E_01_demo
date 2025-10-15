@@ -19,6 +19,8 @@
   "homepage": "https://github.com/dunghkt213/INT3505E_01_demo#readme",
   "dependencies": {
     "express": "^5.1.0",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0"
   }
 }
