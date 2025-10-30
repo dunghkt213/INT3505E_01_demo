@@ -1,216 +1,216 @@
-openapi: 3.0.0
-info:
-  title: Book Library API (JWT + Cache)
-  version: 1.0.0
-  description: >
-    API quản lý sách có xác thực JWT, cache với ETag, và HATEOAS links.  
-    Bao gồm đăng nhập, xem danh sách sách, mượn và trả sách.
+  openapi: 3.0.0
+  info:
+    title: Book Library API (JWT + Cache)
+    version: 1.0.0
+    description: >
+      API quản lý sách có xác thực JWT, cache với ETag, và HATEOAS links.  
+      Bao gồm đăng nhập, xem danh sách sách, mượn và trả sách.
 
-servers:
-  - url: http://localhost:3000
-    description: Local Server
+  servers:
+    - url: http://localhost:3000
+      description: Local Server
 
-tags:
-  - name: Auth
-    description: Đăng nhập để lấy JWT
-  - name: Books
-    description: Các thao tác với sách
+  tags:
+    - name: Auth
+      description: Đăng nhập để lấy JWT
+    - name: Books
+      description: Các thao tác với sách
 
-paths:
-  /login:
-    post:
-      tags: [Auth]
-      summary: Đăng nhập và nhận JWT token
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                username:
-                  type: string
-                  example: user1
-                password:
-                  type: string
-                  example: 123
-      responses:
-        '200':
-          description: Đăng nhập thành công
+  paths:
+    /login:
+      post:
+        tags: [Auth]
+        summary: Đăng nhập và nhận JWT token
+        requestBody:
+          required: true
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message:
-                    type: string
-                  token:
-                    type: string
-        '401':
-          description: Sai tài khoản hoặc mật khẩu
-
-  /api/books:
-    get:
-      tags: [Books]
-      summary: Lấy danh sách tất cả sách (có cache 30s)
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Danh sách sách
-          headers:
-            Cache-Control:
-              schema:
-                type: string
-                example: public, max-age=30
-            ETag:
-              schema:
-                type: string
-                example: 5f2a6c7e1d34b1b...
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user:
+                  username:
                     type: string
                     example: user1
-                  books:
-                    type: array
-                    items:
+                  password:
+                    type: string
+                    example: 123
+        responses:
+          '200':
+            description: Đăng nhập thành công
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                    token:
+                      type: string
+          '401':
+            description: Sai tài khoản hoặc mật khẩu
+
+    /api/books:
+      get:
+        tags: [Books]
+        summary: Lấy danh sách tất cả sách (có cache 30s)
+        security:
+          - bearerAuth: []
+        responses:
+          '200':
+            description: Danh sách sách
+            headers:
+              Cache-Control:
+                schema:
+                  type: string
+                  example: public, max-age=30
+              ETag:
+                schema:
+                  type: string
+                  example: 5f2a6c7e1d34b1b...
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    user:
+                      type: string
+                      example: user1
+                    books:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Book'
+          '304':
+            description: Dữ liệu chưa thay đổi (ETag khớp)
+          '401':
+            description: Thiếu hoặc sai token JWT
+
+    /api/books/{id}:
+      get:
+        tags: [Books]
+        summary: Lấy thông tin một quyển sách (cache 60s)
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: integer
+            description: ID của sách
+        responses:
+          '200':
+            description: Chi tiết sách
+            headers:
+              Cache-Control:
+                schema:
+                  type: string
+                  example: public, max-age=60
+              ETag:
+                schema:
+                  type: string
+                  example: 3e4f9f6b2d5a9...
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Book'
+          '304':
+            description: Dữ liệu chưa thay đổi
+          '404':
+            description: Không tìm thấy sách
+
+    /api/books/{id}/borrow:
+      post:
+        tags: [Books]
+        summary: Mượn sách
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: Mượn thành công
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Mượn thành công bởi user1
+                    book:
                       $ref: '#/components/schemas/Book'
-        '304':
-          description: Dữ liệu chưa thay đổi (ETag khớp)
-        '401':
-          description: Thiếu hoặc sai token JWT
+          '400':
+            description: Sách đã được mượn
+          '404':
+            description: Không tìm thấy sách
 
-  /api/books/{id}:
-    get:
-      tags: [Books]
-      summary: Lấy thông tin một quyển sách (cache 60s)
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
+    /api/books/{id}/return:
+      post:
+        tags: [Books]
+        summary: Trả sách
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: Trả thành công
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Trả thành công
+                    book:
+                      $ref: '#/components/schemas/Book'
+          '403':
+            description: Người dùng không mượn sách này
+          '404':
+            description: Không tìm thấy sách
+
+  components:
+    securitySchemes:
+      bearerAuth:
+        type: http
+        scheme: bearer
+        bearerFormat: JWT
+
+    schemas:
+      Book:
+        type: object
+        properties:
+          id:
             type: integer
-          description: ID của sách
-      responses:
-        '200':
-          description: Chi tiết sách
-          headers:
-            Cache-Control:
-              schema:
-                type: string
-                example: public, max-age=60
-            ETag:
-              schema:
-                type: string
-                example: 3e4f9f6b2d5a9...
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Book'
-        '304':
-          description: Dữ liệu chưa thay đổi
-        '404':
-          description: Không tìm thấy sách
-
-  /api/books/{id}/borrow:
-    post:
-      tags: [Books]
-      summary: Mượn sách
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Mượn thành công
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Mượn thành công bởi user1
-                  book:
-                    $ref: '#/components/schemas/Book'
-        '400':
-          description: Sách đã được mượn
-        '404':
-          description: Không tìm thấy sách
-
-  /api/books/{id}/return:
-    post:
-      tags: [Books]
-      summary: Trả sách
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Trả thành công
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Trả thành công
-                  book:
-                    $ref: '#/components/schemas/Book'
-        '403':
-          description: Người dùng không mượn sách này
-        '404':
-          description: Không tìm thấy sách
-
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
-  schemas:
-    Book:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 1
-        title:
-          type: string
-          example: Lập trình Node.js
-        borrowed:
-          type: boolean
-          example: false
-        borrowedBy:
-          type: string
-          nullable: true
-          example: user1
-        links:
-          type: array
-          items:
-            type: object
-            properties:
-              rel:
-                type: string
-              href:
-                type: string
-              method:
-                type: string
-                example: GET
+            example: 1
+          title:
+            type: string
+            example: Lập trình Node.js
+          borrowed:
+            type: boolean
+            example: false
+          borrowedBy:
+            type: string
+            nullable: true
+            example: user1
+          links:
+            type: array
+            items:
+              type: object
+              properties:
+                rel:
+                  type: string
+                href:
+                  type: string
+                method:
+                  type: string
+                  example: GET

@@ -1,0 +1,183 @@
+openapi: 3.0.3
+info:
+  title: JWT Authentication & Authorization Demo (Node.js + Express)
+  description: >
+    **Buổi 6 – Authentication và Authorization**  
+    Triển khai JWT (access/refresh), Roles, Scopes, Revoke token, và demo replay detection.
+  version: "1.0.0"
+
+servers:
+  - url: http://localhost:3000
+    description: Local server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          example: admin
+        password:
+          type: string
+          example: 123
+    TokenPairResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          example: bearer
+    RefreshRequest:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+    LogoutRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Tùy chọn: có thể truyền token trong body hoặc dùng Authorization header.
+
+security:
+  - bearerAuth: []
+
+paths:
+  /:
+    get:
+      tags: [Public]
+      summary: Ping server
+      responses:
+        "200":
+          description: OK
+
+  /login:
+    post:
+      tags: [Authentication]
+      summary: Đăng nhập và lấy access + refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        "200":
+          description: Đăng nhập thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPairResponse'
+        "401":
+          description: Sai thông tin đăng nhập
+
+  /refresh:
+    post:
+      tags: [Authentication]
+      summary: Lấy access token mới bằng refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        "200":
+          description: Trả về access token mới
+        "401":
+          description: Thiếu refresh token
+        "403":
+          description: Refresh token không hợp lệ hoặc hết hạn
+
+  /books/{book_id}:
+    get:
+      tags: [Books]
+      summary: Lấy thông tin sách (scope read:books)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: book_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Thành công
+        "401":
+          description: Thiếu/không có token
+        "403":
+          description: Không có quyền truy cập hoặc token không hợp lệ
+
+  /books:
+    post:
+      tags: [Books]
+      summary: Thêm sách mới (scope write:books, chỉ admin)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Thành công
+        "403":
+          description: Không đủ quyền
+
+  /books/{book_id}:
+    delete:
+      tags: [Books]
+      summary: Xóa sách (scope delete:books, chỉ admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: book_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Thành công
+        "403":
+          description: Không đủ quyền
+
+  /logout:
+    post:
+      tags: [Security]
+      summary: Thu hồi token (revoke)
+      description: >
+        Có thể truyền token trong body **hoặc** đặt ở header `Authorization: Bearer <token>`.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+      responses:
+        "200":
+          description: Token đã bị thu hồi
+        "400":
+          description: Không có token
+        "401":
+          description: Thiếu/không có token (khi yêu cầu xác thực)
+
+  /secure-action:
+    post:
+      tags: [Security]
+      summary: Demo phát hiện replay attack
+      description: Gọi lại token đã bị revoke sẽ bị 403.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Hành động an toàn
+        "403":
+          description: Replay attack bị phát hiện

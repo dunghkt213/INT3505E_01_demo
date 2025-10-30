@@ -1,0 +1,228 @@
+openapi: 3.0.3
+info:
+  title: Book Pagination API
+  description: >
+    API demo ba kiểu phân trang phổ biến và tính năng thêm sách động:
+    - **Page-based pagination** (`page`, `pageSize`)
+    - **Offset/Limit pagination** (`offset`, `limit`)
+    - **Cursor-based pagination** (`cursor`, `limit`)
+    - **POST /api/books/add**: thêm sách mới, nhập thông tin từ người dùng
+  version: "1.1.0"
+  contact:
+    name: Demo Author
+    email: demo@example.com
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+paths:
+  /api/books/page:
+    get:
+      summary: Page-based pagination
+      description: Lấy danh sách sách theo số trang (`page`, `pageSize`).
+      parameters:
+        - name: page
+          in: query
+          description: Số trang cần lấy (mặc định 1)
+          schema:
+            type: integer
+            example: 2
+        - name: pageSize
+          in: query
+          description: Số phần tử mỗi trang (mặc định 3)
+          schema:
+            type: integer
+            example: 3
+      responses:
+        "200":
+          description: Kết quả phân trang theo trang
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    type: object
+                    properties:
+                      method:
+                        type: string
+                        example: page-based
+                      page:
+                        type: integer
+                        example: 2
+                      pageSize:
+                        type: integer
+                        example: 3
+                      total:
+                        type: integer
+                        example: 10
+                      totalPages:
+                        type: integer
+                        example: 4
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Book"
+
+  /api/books/offset:
+    get:
+      summary: Offset-Limit pagination
+      description: Lấy danh sách sách bằng offset và limit.
+      parameters:
+        - name: offset
+          in: query
+          description: Vị trí bắt đầu (bỏ qua bao nhiêu phần tử)
+          schema:
+            type: integer
+            example: 3
+        - name: limit
+          in: query
+          description: Số phần tử cần lấy
+          schema:
+            type: integer
+            example: 3
+      responses:
+        "200":
+          description: Kết quả phân trang theo offset/limit
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    type: object
+                    properties:
+                      method:
+                        type: string
+                        example: offset-limit
+                      offset:
+                        type: integer
+                        example: 3
+                      limit:
+                        type: integer
+                        example: 3
+                      total:
+                        type: integer
+                        example: 10
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Book"
+
+  /api/books/cursor:
+    get:
+      summary: Cursor-based pagination
+      description: Lấy danh sách sách dựa trên con trỏ (`cursor`, `limit`).
+      parameters:
+        - name: cursor
+          in: query
+          description: ID của bản ghi cuối cùng đã xem
+          schema:
+            type: string
+            example: "3"
+        - name: limit
+          in: query
+          description: Số lượng phần tử cần lấy (mặc định 3)
+          schema:
+            type: integer
+            example: 3
+      responses:
+        "200":
+          description: Kết quả phân trang theo cursor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    type: object
+                    properties:
+                      method:
+                        type: string
+                        example: cursor-based
+                      limit:
+                        type: integer
+                        example: 3
+                      current_cursor:
+                        type: string
+                        example: "3"
+                      next_cursor:
+                        type: string
+                        example: "6"
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Book"
+
+  /api/books/add:
+    post:
+      summary: Thêm sách mới (cho phép nhập dữ liệu)
+      description: >
+        Thêm một quyển sách mới vào danh sách.  
+        Bạn có thể nhập các trường: `title`, `author`, `year`, `category`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                  example: "Clean Code"
+                author:
+                  type: string
+                  example: "Robert C. Martin"
+                year:
+                  type: integer
+                  example: 2008
+                category:
+                  type: string
+                  example: "Software Engineering"
+      responses:
+        "201":
+          description: Sách được thêm thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "📚 Thêm sách thành công"
+                  newBook:
+                    $ref: "#/components/schemas/Book"
+        "400":
+          description: Thiếu trường bắt buộc (ví dụ thiếu title)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Thiếu tiêu đề sách (title)"
+
+components:
+  schemas:
+    Book:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 5
+        title:
+          type: string
+          example: "Clean Code"
+        author:
+          type: string
+          example: "Robert C. Martin"
+        year:
+          type: integer
+          example: 2008
+        category:
+          type: string
+          example: "Software Engineering"
