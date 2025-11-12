@@ -1,0 +1,104 @@
+openapi: 3.0.0
+info:
+  title: Product API
+  version: 1.0.0
+servers:
+- url: http://localhost:3000
+paths:
+  /products:
+    get:
+      operationId: productsGET
+      responses:
+        "200":
+          description: OK
+      summary: Get all products
+      x-eov-operation-handler: controllers/DefaultController
+    post:
+      operationId: productsPOST
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductInput"
+        required: true
+      responses:
+        "201":
+          description: Created
+      summary: Create product
+      x-eov-operation-handler: controllers/DefaultController
+  /products/{id}:
+    delete:
+      operationId: productsIdDELETE
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Deleted
+      summary: Delete product by ID
+      x-eov-operation-handler: controllers/DefaultController
+    get:
+      operationId: productsIdGET
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: OK
+      summary: Get product by ID
+      x-eov-operation-handler: controllers/DefaultController
+    put:
+      operationId: productsIdPUT
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductInput"
+        required: true
+      responses:
+        "200":
+          description: Updated
+      summary: Update product by ID
+      x-eov-operation-handler: controllers/DefaultController
+components:
+  schemas:
+    Product:
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        price:
+          type: number
+      type: object
+    ProductInput:
+      example:
+        price: 0.8008281904610115
+        name: name
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+      required:
+      - name
+      - price
+      type: object
