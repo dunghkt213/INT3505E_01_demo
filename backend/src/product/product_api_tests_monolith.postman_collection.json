@@ -1,0 +1,254 @@
+{
+  "info": {
+    "name": "Click2Buy - Product API Tests (Monolith)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "c2b-product-1762946284"
+  },
+  "item": [
+    {
+      "name": "Create Product",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.variables.set('_ts', Date.now());"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 2xx\", function () {",
+              "  pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+              "});",
+              "pm.test(\"Responded under 1500ms\", function () {",
+              "  pm.expect(pm.response.responseTime).to.be.below(1500);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test(\"Created product has id\", function () {",
+              "  pm.expect(json).to.have.any.keys('_id', 'id');",
+              "});",
+              "pm.environment.set(\"productId\", json._id || json.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "products"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"AutoTest Product {{_ts}}\",\n  \"description\": \"Postman automated test product\",\n  \"price\": 199000,\n  \"brand\": \"AutoBrand\",\n  \"stock\": 10,\n  \"tags\": [\"test\", \"postman\"],\n  \"images\": [\"https://example.com/product.jpg\"]\n}"
+        }
+      }
+    },
+    {
+      "name": "List Products",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 2xx\", function () {",
+              "  pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+              "});",
+              "pm.test(\"Responded under 1500ms\", function () {",
+              "  pm.expect(pm.response.responseTime).to.be.below(1500);",
+              "});",
+              "const json = pm.response.json();",
+              "",
+              "// ✅ Kiểm tra cấu trúc trả về có 'items' là mảng",
+              "pm.test(\"List returns object with items array\", function () {",
+              "  pm.expect(json).to.be.an('object');",
+              "  pm.expect(json).to.have.property('items');",
+              "  pm.expect(json.items).to.be.an('array');",
+              "});",
+              "",
+              "// ✅ Kiểm tra mỗi item có đủ các trường cơ bản",
+              "if (json.items && json.items.length > 0) {",
+              "  pm.test(\"Each product has name, price, and brand\", function () {",
+              "    json.items.forEach(p => {",
+              "      pm.expect(p).to.have.property('name');",
+              "      pm.expect(p).to.have.property('price');",
+              "      pm.expect(p).to.have.property('brand');",
+              "    });",
+              "  });",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "products"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Product by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 2xx\", function () {",
+              "  pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+              "});",
+              "pm.test(\"Responded under 1500ms\", function () {",
+              "  pm.expect(pm.response.responseTime).to.be.below(1500);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test(\"Found product matches requested id\", function () {",
+              "  pm.expect(json._id || json.id).to.eql(pm.environment.get(\"productId\"));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/products/{{productId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "products",
+            "{{productId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Update Product",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 2xx\", function () {",
+              "  pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+              "});",
+              "pm.test(\"Responded under 1500ms\", function () {",
+              "  pm.expect(pm.response.responseTime).to.be.below(1500);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test(\"Updated product has same id\", function () {",
+              "  pm.expect(json._id || json.id).to.eql(pm.environment.get(\"productId\"));",
+              "});",
+              "if (json.price) {",
+              "  pm.test(\"Price updated correctly\", function () {",
+              "    pm.expect(Number(json.price)).to.equal(259000);",
+              "  });",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/products/{{productId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "products",
+            "{{productId}}"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 259000,\n  \"stock\": 20,\n  \"tags\": [\"updated\", \"promo\"]\n}"
+        }
+      }
+    },
+    {
+      "name": "Delete Product",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 2xx\", function () {",
+              "  pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+              "});",
+              "pm.test(\"Responded under 1500ms\", function () {",
+              "  pm.expect(pm.response.responseTime).to.be.below(1500);",
+              "});",
+              "pm.test(\"Deleted successfully\", function () {",
+              "  pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/products/{{productId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "products",
+            "{{productId}}"
+          ]
+        }
+      }
+    }
+  ]
+}
