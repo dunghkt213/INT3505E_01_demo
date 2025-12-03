@@ -16,7 +16,6 @@ exports.ReviewController = void 0;
 const common_1 = require("@nestjs/common");
 const review_service_1 = require("./review.service");
 const create_review_dto_1 = require("./dto/create-review.dto");
-const update_review_dto_1 = require("./dto/update-review.dto");
 const query_review_dto_1 = require("./dto/query-review.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 let ReviewController = class ReviewController {
@@ -33,10 +32,6 @@ let ReviewController = class ReviewController {
     }
     findById(id) {
         return this.reviewService.findOne(id);
-    }
-    async update(id, dto, req) {
-        const user = req.user;
-        return this.reviewService.update(id, user._id, user.role, dto);
     }
     async delete(id, req) {
         const user = req.user;
@@ -68,17 +63,6 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ReviewController.prototype, "findById", null);
-__decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, common_1.HttpCode)(200),
-    (0, common_1.Patch)(':id'),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)()),
-    __param(2, (0, common_1.Req)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_review_dto_1.UpdateReviewDto, Object]),
-    __metadata("design:returntype", Promise)
-], ReviewController.prototype, "update", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.HttpCode)(200),

@@ -1,6 +1,5 @@
 import { ReviewService } from './review.service';
 import { CreateReviewDto } from './dto/create-review.dto';
-import { UpdateReviewDto } from './dto/update-review.dto';
 import { QueryReviewDto } from './dto/query-review.dto';
 export declare class ReviewController {
     private readonly reviewService;
@@ -271,14 +270,6 @@ export declare class ReviewController {
             (pathsToValidate?: import("mongoose").pathsToValidate, options?: import("mongoose").AnyObject): import("mongoose").Error.ValidationError | null;
         };
         __v: number;
-    }>;
-    update(id: string, dto: UpdateReviewDto, req: any): Promise<{
-        message: string;
-        review: (import("mongoose").FlattenMaps<import("./schemas/review.schema").ReviewDocument> & Required<{
-            _id: import("mongoose").FlattenMaps<unknown>;
-        }> & {
-            __v: number;
-        }) | null;
     }>;
     delete(id: string, req: any): Promise<{
         message: string;

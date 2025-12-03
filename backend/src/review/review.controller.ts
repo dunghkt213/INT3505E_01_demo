@@ -55,13 +55,6 @@ export class ReviewController {
    * [PATCH] /reviews/:id
    * Cập nhật review
    */
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(200)
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateReviewDto, @Req() req) {
-    const user = req.user;
-    return this.reviewService.update(id, user._id, user.role, dto);
-  }
 
   /**
    * [DELETE] /reviews/:id
